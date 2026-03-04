@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pul</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1f2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pul">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --bg:#1a1f2e; --surface:#242938; --card:#2d3347; --border:#383e54;
+  --green:#2ecc71; --green2:#27ae60; --red:#e74c3c; --red2:#c0392b;
+  --text:#ecf0f1; --muted:#7f8c9a; --yellow:#f39c12;
+}
+body { background:var(--bg); color:var(--text); font-family:'Nunito',sans-serif; height:100dvh; max-width:430px; margin:0 auto; display:flex; flex-direction:column; overflow:hidden; }
+
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 14px 10px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+.month-nav { display:flex; align-items:center; gap:8px; }
+.month-nav button { background:var(--card); border:none; color:var(--text); width:30px; height:30px; border-radius:8px; font-size:16px; cursor:pointer; }
+.month-label { font-size:14px; font-weight:900; min-width:110px; text-align:center; }
+.ai-btn { background:linear-gradient(135deg,#6c5ce7,#a29bfe); border:none; color:white; padding:7px 13px; border-radius:20px; font-family:'Nunito',sans-serif; font-weight:800; font-size:12px; cursor:pointer; }
+
+.balance-row { display:flex; background:var(--surface); padding:8px 12px 12px; gap:6px; flex-shrink:0; border-bottom:1px solid var(--border); }
+.bal-box { flex:1; background:var(--card); border-radius:12px; padding:8px 10px; }
+.bal-box.main { flex:1.3; }
+.bal-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
+.bal-amount { font-size:14px; font-weight:900; }
+.bal-amount.g { color:var(--green); }
+.bal-amount.r { color:var(--red); }
+
+.main-area { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; min-height:0; }
+.pie-container { position:relative; width:220px; height:220px; flex-shrink:0; }
+.pie-svg { width:220px; height:220px; transform:rotate(-90deg); }
+.pie-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; width:100px; }
+.pie-center-label { font-size:10px; color:var(--muted); text-transform:uppercase; }
+.pie-center-amount { font-size:18px; font-weight:900; color:var(--text); line-height:1.1; }
+.pie-center-sub { font-size:10px; color:var(--muted); }
+
+.cat-section { width:100%; padding:0 10px 6px; flex-shrink:0; }
+.section-tabs { display:flex; gap:6px; margin-bottom:8px; }
+.section-tab { flex:1; padding:7px; border:none; border-radius:10px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:800; cursor:pointer; }
+.section-tab.exp { background:var(--red2); color:white; }
+.section-tab.inc { background:var(--green2); color:white; }
+.section-tab.inactive { background:var(--card); color:var(--muted); }
+.cats-scroll { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; }
+.cats-scroll::-webkit-scrollbar { display:none; }
+.cat-btn { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:3px; background:var(--card); border:2px solid transparent; border-radius:12px; padding:8px 10px; cursor:pointer; transition:all 0.15s; min-width:58px; }
+.cat-btn:active { transform:scale(0.92); }
+.cat-btn.sel-exp { border-color:var(--red); background:#e74c3c18; }
+.cat-btn.sel-inc { border-color:var(--green); background:#2ecc7118; }
+.cat-btn-icon { font-size:20px; }
+.cat-btn-name { font-size:9px; color:var(--muted); font-weight:700; text-align:center; max-width:56px; line-height:1.2; }
+.cat-btn-amt { font-size:10px; font-weight:900; color:var(--text); }
+
+.add-row { display:flex; gap:8px; padding:6px 12px 10px; flex-shrink:0; }
+.add-btn { flex:1; padding:14px; border:none; border-radius:14px; font-family:'Nunito',sans-serif; font-size:16px; font-weight:900; cursor:pointer; transition:transform 0.1s; }
+.add-btn:active { transform:scale(0.95); }
+.add-btn.income { background:var(--green); color:white; }
+.add-btn.expense { background:var(--red); color:white; }
+
+.bottom-nav { display:flex; background:var(--surface); border-top:1px solid var(--border); padding:6px 0 14px; flex-shrink:0; }
+.nav-btn { flex:1; background:none; border:none; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:2px; font-family:'Nunito',sans-serif; font-size:9px; font-weight:800; cursor:pointer; padding:4px; }
+.nav-btn .ni { font-size:18px; }
+.nav-btn.active { color:var(--green); }
+
+.page { display:none; flex:1; overflow:hidden; flex-direction:column; }
+.page.active { display:flex; }
+.back-btn { background:var(--card); border:none; color:var(--text); padding:7px 12px; border-radius:10px; font-family:'Nunito',sans-serif; font-weight:800; cursor:pointer; font-size:13px; }
+.scroll-area { flex:1; overflow-y:auto; padding:10px 12px; }
+.scroll-area::-webkit-scrollbar { display:none; }
+
+.tx-item { display:flex; align-items:center; gap:10px; background:var(--card); border-radius:13px; padding:11px 13px; margin-bottom:7px; animation:fadeUp 0.2s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none} }
+.tx-ico { font-size:24px; width:40px; height:40px; background:var(--surface); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.tx-inf { flex:1; min-width:0; }
+.tx-nm { font-size:13px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tx-ct { font-size:10px; color:var(--muted); margin-top:1px; }
+.tx-am { font-size:14px; font-weight:900; white-space:nowrap; }
+.tx-am.g { color:var(--green); } .tx-am.r { color:var(--red); }
+.tx-dl { background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer; padding:4px; flex-shrink:0; }
+
+.bud-item { background:var(--card); border-radius:13px; padding:13px; margin-bottom:8px; }
+.bud-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.bud-cat { font-weight:800; font-size:13px; }
+.bud-nums { font-size:11px; color:var(--muted); margin-bottom:7px; }
+.prog { height:9px; background:var(--border); border-radius:5px; overflow:hidden; }
+.prog-fill { height:100%; border-radius:5px; transition:width 0.5s; }
+.bud-add-btn { width:100%; padding:13px; background:var(--card); border:2px dashed var(--border); border-radius:13px; color:var(--muted); font-family:'Nunito',sans-serif; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:8px; }
+.badge { padding:2px 8px; border-radius:20px; font-size:10px; font-weight:800; }
+.badge.ok { background:#2ecc7120; color:var(--green); }
+.badge.over { background:#e74c3c20; color:var(--red); }
+.badge.warn { background:#f39c1220; color:var(--yellow); }
+
+.ai-page { display:flex; flex-direction:column; overflow:hidden; }
+.chat-msgs { flex:1; overflow-y:auto; padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+.chat-msgs::-webkit-scrollbar { display:none; }
+.msg { max-width:86%; padding:11px 15px; border-radius:17px; font-size:13px; line-height:1.5; font-weight:600; animation:fadeUp 0.25s; white-space:pre-wrap; }
+.msg.ai { background:var(--card); align-self:flex-start; border-bottom-left-radius:4px; }
+.msg.user { background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:white; align-self:flex-end; border-bottom-right-radius:4px; }
+.chat-row { display:flex; gap:8px; padding:8px 12px 14px; border-top:1px solid var(--border); background:var(--surface); flex-shrink:0; }
+.chat-inp { flex:1; padding:11px 15px; background:var(--card); border:1px solid var(--border); border-radius:22px; color:var(--text); font-family:'Nunito',sans-serif; font-size:13px; font-weight:600; outline:none; }
+.chat-inp:focus { border-color:#6c5ce7; }
+.send-btn { width:42px; height:42px; background:linear-gradient(135deg,#6c5ce7,#a29bfe); border:none; border-radius:50%; color:white; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+.overlay { display:none; position:fixed; inset:0; background:#00000099; z-index:300; align-items:flex-end; justify-content:center; }
+.overlay.open { display:flex; }
+.modal { background:var(--surface); border-radius:22px 22px 0 0; padding:20px 16px 32px; width:100%; max-width:430px; animation:slideUp 0.28s ease; max-height:92dvh; overflow-y:auto; }
+.modal::-webkit-scrollbar { display:none; }
+@keyframes slideUp { from{transform:translateY(100%)}to{transform:none} }
+.modal-title { font-size:19px; font-weight:900; margin-bottom:14px; }
+.modal-title.g { color:var(--green); } .modal-title.r { color:var(--red); }
+
+.disp { background:var(--card); border-radius:12px; padding:14px; text-align:center; margin-bottom:12px; }
+.disp span { font-size:30px; font-weight:900; }
+.disp .cur { font-size:14px; color:var(--muted); }
+
+.note-inp { width:100%; padding:11px 14px; background:var(--card); border:1px solid var(--border); border-radius:11px; color:var(--text); font-family:'Nunito',sans-serif; font-size:13px; font-weight:600; outline:none; margin-bottom:12px; }
+.note-inp:focus { border-color:var(--green); }
+
+.sel-cat-box { display:flex; align-items:center; gap:10px; background:var(--card); border-radius:11px; padding:11px 14px; margin-bottom:10px; cursor:pointer; }
+.sel-cat-box .icon { font-size:22px; }
+.sel-cat-box .name { font-weight:800; font-size:14px; flex:1; }
+.sel-cat-box .arrow { color:var(--muted); font-size:12px; }
+
+.cp-wrap { display:none; margin-bottom:12px; background:var(--card); border-radius:12px; padding:10px; }
+.cp-wrap.open { display:block; }
+.cp-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; max-height:200px; overflow-y:auto; }
+.cp-grid::-webkit-scrollbar { display:none; }
+.cp-btn { background:var(--surface); border:2px solid transparent; border-radius:10px; padding:7px 4px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; transition:all 0.15s; }
+.cp-btn:active { transform:scale(0.92); }
+.cp-btn .e { font-size:20px; }
+.cp-btn .n { font-size:9px; color:var(--muted); font-weight:700; text-align:center; }
+.cp-btn.active-g { border-color:var(--green); background:#2ecc7115; }
+.cp-btn.active-r { border-color:var(--red); background:#e74c3c15; }
+
+.numpad { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px; }
+.num-btn { padding:14px; background:var(--card); border:none; border-radius:11px; color:var(--text); font-family:'Nunito',sans-serif; font-size:19px; font-weight:900; cursor:pointer; }
+.num-btn:active { background:var(--border); }
+.num-btn.act { font-size:14px; background:var(--border); }
+.ok-btn { width:100%; padding:16px; border:none; border-radius:14px; font-family:'Nunito',sans-serif; font-size:17px; font-weight:900; cursor:pointer; }
+.ok-btn:active { opacity:0.85; }
+.ok-btn.g { background:var(--green); color:white; }
+.ok-btn.r { background:var(--red); color:white; }
+.ok-btn.y { background:var(--yellow); color:white; }
+.cancel-lnk { width:100%; padding:11px; background:none; border:none; color:var(--muted); font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; cursor:pointer; margin-top:6px; }
+.empty { text-align:center; padding:40px 20px; color:var(--muted); }
+.empty-icon { font-size:44px; margin-bottom:10px; }
+.empty p { font-size:13px; font-weight:700; }
+::-webkit-scrollbar { width:0; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="pg-home" class="page active">
+  <div class="topbar">
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">‹</button>
+      <span class="month-label" id="monthLabel"></span>
+      <button onclick="changeMonth(1)">›</button>
+    </div>
+    <button class="ai-btn" onclick="goTo('ai')">🤖 AI Yordam</button>
+  </div>
+  <div class="balance-row">
+    <div class="bal-box"><div class="bal-label">Kirim</div><div class="bal-amount g" id="dispInc">0</div></div>
+    <div class="bal-box main"><div class="bal-label">Balans</div><div class="bal-amount" id="dispBal">0</div></div>
+    <div class="bal-box"><div class="bal-label">Chiqim</div><div class="bal-amount r" id="dispExp">0</div></div>
+  </div>
+  <div class="main-area">
+    <div class="pie-container">
+      <svg class="pie-svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="38" fill="var(--surface)" stroke="var(--border)" stroke-width="1"/>
+        <g id="pieSlices"></g>
+        <circle cx="50" cy="50" r="23" fill="var(--bg)"/>
+      </svg>
+      <div class="pie-center">
+        <div class="pie-center-label" id="pieLabel">Chiqim</div>
+        <div class="pie-center-amount" id="pieAmt">0</div>
+        <div class="pie-center-sub">so'm</div>
+      </div>
+    </div>
+  </div>
+  <div class="cat-section">
+    <div class="section-tabs">
+      <button class="section-tab exp" id="tabExp" onclick="setView('exp')">− Chiqim</button>
+      <button class="section-tab inactive" id="tabInc" onclick="setView('inc')">+ Kirim</button>
+    </div>
+    <div class="cats-scroll" id="catsScroll"></div>
+  </div>
+  <div class="add-row">
+    <button class="add-btn income" onclick="openAdd('income')">＋ Kirim</button>
+    <button class="add-btn expense" onclick="openAdd('expense')">－ Chiqim</button>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="goTo('home')"><span class="ni">🏠</span>Asosiy</button>
+    <button class="nav-btn" id="nav-txs" onclick="goTo('txs')"><span class="ni">📋</span>Tarix</button>
+    <button class="nav-btn" id="nav-budget" onclick="goTo('budget')"><span class="ni">🎯</span>Byudjet</button>
+    <button class="nav-btn" id="nav-ai" onclick="goTo('ai')"><span class="ni">🤖</span>AI</button>
+  </nav>
+</div>
+
+<!-- TRANSACTIONS -->
+<div id="pg-txs" class="page" style="flex-direction:column">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('home')">‹ Orqaga</button>
+    <span style="font-size:15px;font-weight:900">Barcha operatsiyalar</span>
+    <span style="width:70px"></span>
+  </div>
+  <div class="scroll-area" id="txPage"></div>
+</div>
+
+<!-- BUDGET -->
+<div id="pg-budget" class="page" style="flex-direction:column">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('home')">‹ Orqaga</button>
+    <span style="font-size:15px;font-weight:900">Byudjet</span>
+    <span style="width:70px"></span>
+  </div>
+  <div class="scroll-area" id="budgetPage"></div>
+</div>
+
+<!-- AI -->
+<div id="pg-ai" class="page ai-page">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('home')">‹ Orqaga</button>
+    <span style="font-size:15px;font-weight:900">🤖 AI Yordamchi</span>
+    <span style="width:70px"></span>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"></div>
+  <div class="chat-row">
+    <input class="chat-inp" id="chatInp" placeholder="Savol bering..." onkeydown="if(event.key==='Enter')sendAI()">
+    <button class="send-btn" onclick="sendAI()">➤</button>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="modal-title" id="addTitle">Yangi kirim</div>
+    <div class="disp"><span class="cur">so'm </span><span id="numDisp">0</span></div>
+    <div class="sel-cat-box" onclick="togglePicker()">
+      <span class="icon" id="selIcon">📦</span>
+      <span class="name" id="selName">Kategoriya tanlang</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="cp-wrap" id="cpWrap">
+      <div class="cp-grid" id="cpGrid"></div>
+    </div>
+    <input class="note-inp" id="noteInp" placeholder="Izoh (ixtiyoriy)">
+    <div class="numpad">
+      <button class="num-btn" onclick="np('7')">7</button>
+      <button class="num-btn" onclick="np('8')">8</button>
+      <button class="num-btn" onclick="np('9')">9</button>
+      <button class="num-btn" onclick="np('4')">4</button>
+      <button class="num-btn" onclick="np('5')">5</button>
+      <button class="num-btn" onclick="np('6')">6</button>
+      <button class="num-btn" onclick="np('1')">1</button>
+      <button class="num-btn" onclick="np('2')">2</button>
+      <button class="num-btn" onclick="np('3')">3</button>
+      <button class="num-btn act" onclick="np('000')">000</button>
+      <button class="num-btn" onclick="np('0')">0</button>
+      <button class="num-btn act" onclick="np('del')">⌫</button>
+    </div>
+    <button class="ok-btn" id="okBtn" onclick="saveTx()">✓ Saqlash</button>
+    <button class="cancel-lnk" onclick="closeAdd()">Bekor qilish</button>
+  </div>
+</div>
+
+<!-- BUDGET MODAL -->
+<div class="overlay" id="budOverlay">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--yellow)">🎯 Limit qo'shish</div>
+    <div style="background:var(--card);border-radius:12px;padding:10px;margin-bottom:12px;">
+      <div class="cp-grid" id="budCatGrid"></div>
+    </div>
+    <div class="disp"><span class="cur">so'm </span><span id="budDisp">0</span></div>
+    <div class="numpad">
+      <button class="num-btn" onclick="bn('7')">7</button>
+      <button class="num-btn" onclick="bn('8')">8</button>
+      <button class="num-btn" onclick="bn('9')">9</button>
+      <button class="num-btn" onclick="bn('4')">4</button>
+      <button class="num-btn" onclick="bn('5')">5</button>
+      <button class="num-btn" onclick="bn('6')">6</button>
+      <button class="num-btn" onclick="bn('1')">1</button>
+      <button class="num-btn" onclick="bn('2')">2</button>
+      <button class="num-btn" onclick="bn('3')">3</button>
+      <button class="num-btn act" onclick="bn('000')">000</button>
+      <button class="num-btn" onclick="bn('0')">0</button>
+      <button class="num-btn act" onclick="bn('del')">⌫</button>
+    </div>
+    <button class="ok-btn y" onclick="saveBudget()">✓ Saqlash</button>
+    <button class="cancel-lnk" onclick="closeBud()">Bekor qilish</button>
+  </div>
+</div>
+
+<script>
+const MONTHS = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+
+// ===== 32 CHIQIM KATEGORIYASI =====
+const CATS_EXP = [
+  {id:'food',      icon:'🍔', name:'Ovqat'},
+  {id:'cafe',      icon:'☕', name:'Kafe'},
+  {id:'grocery',   icon:'🛒', name:'Oziq-ovqat'},
+  {id:'restaurant',icon:'🍽️', name:'Restoran'},
+  {id:'transport', icon:'🚕', name:'Taksi'},
+  {id:'car',       icon:'🚗', name:'Avto'},
+  {id:'fuel',      icon:'⛽', name:'Benzin'},
+  {id:'metro',     icon:'🚇', name:'Metro'},
+  {id:'shop',      icon:'🛍️', name:'Xarid'},
+  {id:'clothes',   icon:'👔', name:'Kiyim'},
+  {id:'shoes',     icon:'👟', name:'Poyabzal'},
+  {id:'health',    icon:'💊', name:'Dori'},
+  {id:'doctor',    icon:'🏥', name:'Doktor'},
+  {id:'sport',     icon:'⚽', name:'Sport'},
+  {id:'gym',       icon:'🏋️', name:'Gym'},
+  {id:'beauty',    icon:'💅', name:'Go\'zallik'},
+  {id:'home',      icon:'🏠', name:'Uy'},
+  {id:'rent',      icon:'🔑', name:'Ijara'},
+  {id:'utility',   icon:'💡', name:'Komunal'},
+  {id:'internet',  icon:'📶', name:'Internet'},
+  {id:'phone',     icon:'📱', name:'Telefon'},
+  {id:'tech',      icon:'💻', name:'Texno'},
+  {id:'edu',       icon:'📚', name:'Ta\'lim'},
+  {id:'kids',      icon:'🧒', name:'Bolalar'},
+  {id:'gift',      icon:'🎁', name:'Sovg\'a'},
+  {id:'fun',       icon:'🎮', name:'O\'yin'},
+  {id:'travel',    icon:'✈️', name:'Sayohat'},
+  {id:'hotel',     icon:'🏨', name:'Mehmon'},
+  {id:'pet',       icon:'🐶', name:'Hayvon'},
+  {id:'charity',   icon:'❤️', name:'Sadaqa'},
+  {id:'subscribe', icon:'📺', name:'Obuna'},
+  {id:'other_exp', icon:'📦', name:'Boshqa'},
+];
+
+// ===== 12 KIRIM KATEGORIYASI =====
+const CATS_INC = [
+  {id:'salary',    icon:'💼', name:'Maosh'},
+  {id:'freelance', icon:'💻', name:'Freelance'},
+  {id:'business',  icon:'🏪', name:'Biznes'},
+  {id:'invest',    icon:'📈', name:'Invest'},
+  {id:'dividend',  icon:'💹', name:'Dividend'},
+  {id:'rent_inc',  icon:'🏠', name:'Ijara'},
+  {id:'sell_inc',  icon:'🏷️', name:'Sotish'},
+  {id:'gift_inc',  icon:'🎁', name:'Sovg\'a'},
+  {id:'bonus',     icon:'🏆', name:'Bonus'},
+  {id:'refund',    icon:'↩️', name:'Qaytim'},
+  {id:'loan_in',   icon:'🤝', name:'Qarz oldi'},
+  {id:'other_inc', icon:'💰', name:'Boshqa'},
+];
+
+const PIE_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#ff5722','#00bcd4','#8bc34a','#ff9800','#607d8b','#795548','#009688','#673ab7'];
+
+// ===== STATE =====
+let txs = ld('pul_txs4', []);
+let budgets = ld('pul_bud4', {});
+let curMonth = new Date().getMonth();
+let curYear = new Date().getFullYear();
+let curView = 'exp';
+let addType = 'expense';
+let numStr = '';
+let budNumStr = '';
+let selCat = null;
+let budSelCat = null;
+let chatHistory = [];
+let aiInited = false;
+
+function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+
+// ===== NAV =====
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+page).classList.add('active');
+  const nb=document.getElementById('nav-'+page);
+  if(nb)nb.classList.add('active');
+  if(page==='home')renderHome();
+  if(page==='txs')renderTxs();
+  if(page==='budget')renderBudget();
+  if(page==='ai')initAI();
+}
+
+// ===== MONTH =====
+function changeMonth(d) {
+  curMonth+=d;
+  if(curMonth>11){curMonth=0;curYear++;}
+  if(curMonth<0){curMonth=11;curYear--;}
+  renderHome();
+}
+function getMonthTxs() {
+  return txs.filter(t=>{const dt=new Date(t.date);return dt.getMonth()===curMonth&&dt.getFullYear()===curYear;});
+}
+
+// ===== FORMAT =====
+function fmt(n){return Math.abs(Math.round(n)).toLocaleString('uz-UZ');}
+function fmtS(n){
+  n=Math.abs(Math.round(n));
+  if(n>=1000000000)return(n/1000000000).toFixed(1)+'mld';
+  if(n>=1000000)return(n/1000000).toFixed(1)+'mln';
+  if(n>=1000)return(n/1000).toFixed(0)+'k';
+  return n.toString();
+}
+
+// ===== RENDER HOME =====
+function setView(v) {
+  curView=v;
+  document.getElementById('tabExp').className='section-tab '+(v==='exp'?'exp':'inactive');
+  document.getElementById('tabInc').className='section-tab '+(v==='inc'?'inc':'inactive');
+  renderCats();renderPie();
+}
+
+function renderHome() {
+  document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
+  const mTxs=getMonthTxs();
+  const inc=mTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp=mTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const bal=inc-exp;
+  document.getElementById('dispInc').textContent=fmtS(inc)+" so'm";
+  document.getElementById('dispExp').textContent=fmtS(exp)+" so'm";
+  const bEl=document.getElementById('dispBal');
+  bEl.textContent=fmtS(Math.abs(bal))+" so'm";
+  bEl.style.color=bal>=0?'var(--green)':'var(--red)';
+  renderPie();renderCats();
+}
+
+function renderPie() {
+  const mTxs=getMonthTxs();
+  const filtered=mTxs.filter(t=>t.type===(curView==='exp'?'expense':'income'));
+  const catMap={};
+  filtered.forEach(t=>{catMap[t.catId]=(catMap[t.catId]||0)+t.amount;});
+  const entries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  document.getElementById('pieLabel').textContent=curView==='exp'?'Chiqim':'Kirim';
+  document.getElementById('pieAmt').textContent=fmtS(total);
+  const svg=document.getElementById('pieSlices');
+  svg.innerHTML='';
+  if(!entries.length){
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx','50');c.setAttribute('cy','50');c.setAttribute('r','38');
+    c.setAttribute('fill','none');c.setAttribute('stroke','var(--border)');c.setAttribute('stroke-width','14');
+    svg.appendChild(c);return;
+  }
+  const r=38,cx=50,cy=50,circ=2*Math.PI*r;
+  let offset=0;
+  entries.forEach(([id,val],i)=>{
+    const pct=val/total;
+    const dash=pct*circ;
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',r);
+    c.setAttribute('fill','none');c.setAttribute('stroke',PIE_COLORS[i%PIE_COLORS.length]);
+    c.setAttribute('stroke-width','14');
+    c.setAttribute('stroke-dasharray',`${dash} ${circ-dash}`);
+    c.setAttribute('stroke-dashoffset',`${-offset*circ}`);
+    svg.appendChild(c);
+    offset+=pct;
+  });
+}
+
+function renderCats() {
+  const mTxs=getMonthTxs();
+  const cats=curView==='exp'?CATS_EXP:CATS_INC;
+  const filtered=mTxs.filter(t=>t.type===(curView==='exp'?'expense':'income'));
+  const catMap={};
+  filtered.forEach(t=>{catMap[t.catId]=(catMap[t.catId]||0)+t.amount;});
+  const sorted=[...cats].sort((a,b)=>(catMap[b.id]||0)-(catMap[a.id]||0));
+  document.getElementById('catsScroll').innerHTML=sorted.map(c=>{
+    const amt=catMap[c.id]||0;
+    return `<div class="cat-btn ${amt>0?(curView==='exp'?'sel-exp':'sel-inc'):''}">
+      <span class="cat-btn-icon">${c.icon}</span>
+      <span class="cat-btn-name">${c.name}</span>
+      ${amt>0?`<span class="cat-btn-amt">${fmtS(amt)}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ===== ADD TX =====
+function openAdd(type) {
+  addType=type; numStr=''; selCat=null;
+  document.getElementById('numDisp').textContent='0';
+  document.getElementById('noteInp').value='';
+  document.getElementById('selIcon').textContent='📦';
+  document.getElementById('selName').textContent='Kategoriya tanlang';
+  document.getElementById('cpWrap').classList.remove('open');
+  const title=document.getElementById('addTitle');
+  title.textContent=type==='income'?'Yangi kirim':'Yangi chiqim';
+  title.className='modal-title '+(type==='income'?'g':'r');
+  document.getElementById('okBtn').className='ok-btn '+(type==='income'?'g':'r');
+  renderCatPicker();
+  document.getElementById('addOverlay').classList.add('open');
+}
+function closeAdd(){document.getElementById('addOverlay').classList.remove('open');}
+function togglePicker(){document.getElementById('cpWrap').classList.toggle('open');}
+
+function renderCatPicker(){
+  const cats=addType==='income'?CATS_INC:CATS_EXP;
+  document.getElementById('cpGrid').innerHTML=cats.map(c=>`
+    <div class="cp-btn ${selCat&&selCat.id===c.id?(addType==='income'?'active-g':'active-r'):''}" onclick="pickCat('${c.id}')">
+      <span class="e">${c.icon}</span><span class="n">${c.name}</span>
+    </div>`).join('');
+}
+
+function pickCat(id){
+  const cats=addType==='income'?CATS_INC:CATS_EXP;
+  selCat=cats.find(c=>c.id===id);
+  document.getElementById('selIcon').textContent=selCat.icon;
+  document.getElementById('selName').textContent=selCat.name;
+  document.getElementById('cpWrap').classList.remove('open');
+  renderCatPicker();
+}
+
+function np(v){
+  if(v==='del')numStr=numStr.slice(0,-1);
+  else if(v==='000')numStr+='000';
+  else{if(numStr.length>=12)return;numStr+=v;}
+  document.getElementById('numDisp').textContent=(parseInt(numStr||'0')).toLocaleString('uz-UZ');
+}
+
+function saveTx(){
+  const amount=parseInt(numStr||'0');
+  if(!amount){alert('Summani kiriting!');return;}
+  if(!selCat){alert('Kategoriya tanlang!');return;}
+  txs.push({id:Date.now().toString(),type:addType,amount,catId:selCat.id,catIcon:selCat.icon,catName:selCat.name,note:document.getElementById('noteInp').value.trim(),date:new Date().toISOString()});
+  sv('pul_txs4',txs);
+  closeAdd();renderHome();
+}
+
+// ===== TX PAGE =====
+function renderTxs(){
+  const page=document.getElementById('txPage');
+  const sorted=[...txs].reverse();
+  if(!sorted.length){page.innerHTML='<div class="empty"><div class="empty-icon">💳</div><p>Hali operatsiya yo\'q</p></div>';return;}
+  page.innerHTML=sorted.map(t=>`
+    <div class="tx-item">
+      <div class="tx-ico">${t.catIcon}</div>
+      <div class="tx-inf">
+        <div class="tx-nm">${t.note||t.catName}</div>
+        <div class="tx-ct">${t.catName} · ${new Date(t.date).toLocaleDateString('uz-UZ')}</div>
+      </div>
+      <div class="tx-am ${t.type==='income'?'g':'r'}">${t.type==='income'?'+':'-'}${fmt(t.amount)} so'm</div>
+      <button class="tx-dl" onclick="delTx('${t.id}')">✕</button>
+    </div>`).join('');
+}
+
+function delTx(id){
+  if(!confirm('O\'chirilsinmi?'))return;
+  txs=txs.filter(t=>t.id!==id);
+  sv('pul_txs4',txs);
+  renderTxs();renderHome();
+}
+
+// ===== BUDGET =====
+function renderBudget(){
+  const page=document.getElementById('budgetPage');
+  const mTxs=getMonthTxs().filter(t=>t.type==='expense');
+  const catSpend={};
+  mTxs.forEach(t=>{catSpend[t.catId]=(catSpend[t.catId]||0)+t.amount;});
+  let html=`<button class="bud-add-btn" onclick="openBud()">＋ Yangi limit qo'shish</button>`;
+  const entries=Object.entries(budgets);
+  if(!entries.length){html+='<div class="empty"><div class="empty-icon">🎯</div><p>Hali limit yo\'q</p></div>';}
+  else entries.forEach(([catId,limit])=>{
+    const cat=CATS_EXP.find(c=>c.id===catId)||{icon:'📦',name:catId};
+    const spent=catSpend[catId]||0;
+    const pct=Math.min(spent/limit*100,100);
+    const over=spent>limit,warn=pct>70&&!over;
+    const color=over?'var(--red)':warn?'var(--yellow)':'var(--green)';
+    const badge=over?'<span class="badge over">Oshdi!</span>':warn?'<span class="badge warn">Ehtiyot</span>':'<span class="badge ok">OK</span>';
+    html+=`<div class="bud-item">
+      <div class="bud-top"><span class="bud-cat">${cat.icon} ${cat.name}</span>${badge}</div>
+      <div class="bud-nums">${fmt(spent)} / ${fmt(limit)} so'm (${Math.round(pct)}%)</div>
+      <div class="prog"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
+    </div>`;
+  });
+  page.innerHTML=html;
+}
+
+function openBud(){
+  budNumStr='';budSelCat=null;
+  document.getElementById('budDisp').textContent='0';
+  renderBudCats();
+  document.getElementById('budOverlay').classList.add('open');
+}
+function closeBud(){document.getElementById('budOverlay').classList.remove('open');}
+
+function renderBudCats(){
+  document.getElementById('budCatGrid').innerHTML=CATS_EXP.map(c=>`
+    <div class="cp-btn ${budSelCat&&budSelCat.id===c.id?'active-r':''}" onclick="pickBudCat('${c.id}')">
+      <span class="e">${c.icon}</span><span class="n">${c.name}</span>
+    </div>`).join('');
+}
+function pickBudCat(id){budSelCat=CATS_EXP.find(c=>c.id===id);renderBudCats();}
+function bn(v){
+  if(v==='del')budNumStr=budNumStr.slice(0,-1);
+  else if(v==='000')budNumStr+='000';
+  else{if(budNumStr.length>=12)return;budNumStr+=v;}
+  document.getElementById('budDisp').textContent=(parseInt(budNumStr||'0')).toLocaleString('uz-UZ');
+}
+function saveBudget(){
+  if(!budSelCat){alert('Kategoriya tanlang!');return;}
+  const limit=parseInt(budNumStr||'0');
+  if(!limit){alert('Limitni kiriting!');return;}
+  budgets[budSelCat.id]=limit;
+  sv('pul_bud4',budgets);
+  closeBud();renderBudget();
+}
+
+// ===== AI =====
+function initAI(){
+  if(aiInited)return;
+  aiInited=true;
+  addMsg('Salom! 👋 Men sizning shaxsiy moliya yordamchingizman.\n\nXarajatlaringizni tahlil qilaman, byudjet maslahatlarini beraman va tejash yo\'llarini ko\'rsataman. Savol bering!','ai');
+}
+function addMsg(text,who){
+  const div=document.createElement('div');
+  div.className='msg '+who;
+  div.textContent=text;
+  document.getElementById('chatMsgs').appendChild(div);
+  document.getElementById('chatMsgs').scrollTop=99999;
+  return div;
+}
+async function sendAI(){
+  const inp=document.getElementById('chatInp');
+  const text=inp.value.trim();
+  if(!text)return;
+  inp.value='';
+  addMsg(text,'user');
+  const mTxs=getMonthTxs();
+  const inc=mTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp=mTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const catMap={};
+  mTxs.filter(t=>t.type==='expense').forEach(t=>{catMap[t.catName]=(catMap[t.catName]||0)+t.amount;});
+  const catStr=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([n,v])=>`${n}: ${fmt(v)} so'm`).join(', ');
+  const budStr=Object.entries(budgets).map(([id,l])=>{const c=CATS_EXP.find(x=>x.id===id);return`${c?c.name:id}: ${fmt(l)} so'm`;}).join(', ');
+  const sys=`Sen "Pul" ilovasining moliya yordamchisisn. O'zbek tilida qisqa va aniq javob ber.
+Joriy oy (${MONTHS[curMonth]} ${curYear}): Kirim: ${fmt(inc)} so'm, Chiqim: ${fmt(exp)} so'm, Balans: ${fmt(inc-exp)} so'm.
+Chiqimlar: ${catStr||'yo\'q'}. Byudjetlar: ${budStr||'yo\'q'}.`;
+  chatHistory.push({role:'user',content:text});
+  const loader=addMsg('⏳ Yozmoqda...','ai');
+  loader.style.opacity='0.5';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:sys,messages:chatHistory.slice(-14)})});
+    const data=await res.json();
+    const reply=data.content?.[0]?.text||'Xatolik.';
+    loader.remove();
+    addMsg(reply,'ai');
+    chatHistory.push({role:'assistant',content:reply});
+  }catch(e){loader.remove();addMsg('Xatolik: tarmoq muammosi.','ai');}
+}
+
+renderHome();
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('PWA: SW registered', reg.scope))
+      .catch(err => console.log('PWA: SW error', err));
+  });
+}
+
+// ===== PWA INSTALL PROMPT =====
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install button
+  const btn = document.createElement('button');
+  btn.textContent = '📲 Ilovani o\'rnatish';
+  btn.style.cssText = 'position:fixed;bottom:90px;right:14px;background:#2ecc71;color:white;border:none;padding:10px 16px;border-radius:20px;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;cursor:pointer;z-index:999;box-shadow:0 4px 15px #2ecc7166;';
+  btn.onclick = () => {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { btn.remove(); deferredPrompt = null; });
+  };
+  document.body.appendChild(btn);
+  setTimeout(() => btn.remove(), 15000);
+});
+</script>
+</body>
+</html>
